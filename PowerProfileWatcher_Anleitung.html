@@ -605,7 +605,11 @@
     <!-- OFFICE SCRIPT -->
     <div class="section" id="office">
       <h2><span class="num">02</span> office.ps1 erstellen</h2>
-      <p>Erstelle die Datei <code>D:\Scripts\office.ps1</code> mit folgendem Inhalt. Die <strong>GUID</strong> muss durch deine eigene ersetzt werden.</p>
+      <p>Erstelle die Datei mit folgendem Inhalt. Die <strong>GUID</strong> muss durch deine eigene ersetzt werden.</p>
+      <div class="info-box">
+        <div class="box-title">📁 Speicherort</div>
+        <p>Speichere dieses Script unter: <code>C:\Scripts\office.ps1</code></p>
+      </div>
 
       <div class="warning-box">
         <div class="box-title">⚠ Anpassen erforderlich</div>
@@ -649,6 +653,10 @@ Write-Host <span class="str">"Office Profil aktiv: 80% Max CPU, Boost gesperrt, 
     <div class="section" id="gaming">
       <h2><span class="num">03</span> gaming.ps1 erstellen</h2>
       <p>Dieses Script erstellt bei jedem Aufruf ein frisches "Ultimative Leistung"-Schema. Kein Anpassen nötig.</p>
+      <div class="info-box">
+        <div class="box-title">📁 Speicherort</div>
+        <p>Speichere dieses Script unter: <code>C:\Scripts\gaming.ps1</code></p>
+      </div>
 
       <div class="code-block">
         <div class="code-header"><span class="code-lang">gaming.ps1</span><button class="copy-btn" onclick="copyCode(this)">Kopieren</button></div>
@@ -691,6 +699,10 @@ Write-Host <span class="str">"Gaming Profil aktiv: Boost freigegeben, EPP 0."</s
     <!-- WATCHER SCRIPT -->
     <div class="section" id="watcher">
       <h2><span class="num">04</span> watcher.ps1 erstellen</h2>
+      <div class="info-box">
+        <div class="box-title">📁 Speicherort</div>
+        <p>Speichere dieses Script unter: <code>C:\Scripts\watcher.ps1</code></p>
+      </div>
       <div class="warning-box">
         <div class="box-title">⚠ Anpassen erforderlich</div>
         <p>Ersetze <code>DEIN-NVML-PFAD-HIER</code> mit dem Pfad aus Schritt 01 (z.B. <code>C:\Windows\System32\DriverStore\FileRepository\nvmii.inf_amd64_XXXXXXXX\nvml.dll</code>).</p>
@@ -711,8 +723,8 @@ $host.UI.RawUI.WindowTitle = <span class="str">"Power Profile Watcher (NVML dGPU
 powercfg /setactive <span class="str">"DEINE-OFFICE-GUID-HIER"</span>
 
 <span class="cm"># HIER ANPASSEN:</span>
-<span class="var">$OfficeScript</span> = <span class="str">"D:\Scripts\office.ps1"</span>
-<span class="var">$GamingScript</span> = <span class="str">"D:\Scripts\gaming.ps1"</span>
+<span class="var">$OfficeScript</span> = <span class="str">"C:\Scripts\office.ps1"</span>
+<span class="var">$GamingScript</span> = <span class="str">"C:\Scripts\gaming.ps1"</span>
 <span class="var">$NvmlPath</span>     = <span class="str">"DEIN-NVML-PFAD-HIER"</span>
 
 <span class="cm"># Schwellenwerte</span>
@@ -801,7 +813,7 @@ Write-Host <span class="str">"Watcher gestartet. Gaming: $RequiredGamingReads Re
         <li><p>Name: <code>PowerProfileOffice_Start</code></p></li>
         <li><p>Trigger: <strong>Bei Anmeldung</strong></p></li>
         <li><p>Programm/Skript: <code>pwsh.exe</code></p></li>
-        <li><p>Argumente: <code>-ExecutionPolicy Bypass -WindowStyle Hidden -File "D:\Scripts\office.ps1"</code></p></li>
+        <li><p>Argumente: <code>-ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Scripts\office.ps1"</code></p></li>
         <li><p>Starten in: <code>C:\Program Files\PowerShell\7</code></p></li>
         <li><p>Eigenschaften öffnen → "Mit höchsten Berechtigungen ausführen" anhaken</p></li>
         <li><p>Tab Trigger → Doppelklick → Verzögerung: <strong>15 Sekunden</strong></p></li>
@@ -813,7 +825,7 @@ Write-Host <span class="str">"Watcher gestartet. Gaming: $RequiredGamingReads Re
         <li><p>Name: <code>PowerProfileWatcher_PS7</code></p></li>
         <li><p>Trigger: <strong>Beim Start des Computers</strong></p></li>
         <li><p>Programm/Skript: <code>C:\PROGRA~1\PowerShell\7\pwsh.exe</code></p></li>
-        <li><p>Argumente: <code>-ExecutionPolicy Bypass -WindowStyle Hidden -File "D:\Scripts\watcher.ps1"</code></p></li>
+        <li><p>Argumente: <code>-ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Scripts\watcher.ps1"</code></p></li>
         <li><p>Eigenschaften → Benutzer auf deinen Account ändern (nicht SYSTEM)</p></li>
         <li><p>"Mit höchsten Berechtigungen ausführen" anhaken</p></li>
         <li><p>Tab Trigger → Verzögerung: <strong>15 Sekunden</strong></p></li>
@@ -845,13 +857,13 @@ Write-Host <span class="str">"Watcher gestartet. Gaming: $RequiredGamingReads Re
       <div class="code-block">
         <div class="code-header"><span class="code-lang">PowerShell 7 (Admin)</span><button class="copy-btn" onclick="copyCode(this)">Kopieren</button></div>
         <pre><span class="cm"># Office-Profil testen</span>
-& <span class="str">"D:\Scripts\office.ps1"</span>
+& <span class="str">"C:\Scripts\office.ps1"</span>
 
 <span class="cm"># Gaming-Profil testen</span>
-& <span class="str">"D:\Scripts\gaming.ps1"</span>
+& <span class="str">"C:\Scripts\gaming.ps1"</span>
 
 <span class="cm"># Watcher manuell starten (mit Ausgabe)</span>
-& <span class="str">"D:\Scripts\watcher.ps1"</span></pre>
+& <span class="str">"C:\Scripts\watcher.ps1"</span></pre>
       </div>
 
       <h3>Autostart prüfen (nach Neustart)</h3>
