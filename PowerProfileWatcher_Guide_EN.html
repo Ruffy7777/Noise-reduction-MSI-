@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Power Profile Watcher – Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+  :root {
+    --bg:#0d1117;--surface:#161b22;--surface2:#1c2128;--border:#30363d;
+    --blue:#58a6ff;--blue-dim:#1f3a5f;--green:#3fb950;--green-dim:#1a3d2b;
+    --orange:#d29922;--orange-dim:#3d2e0a;--red:#f85149;
+    --text:#e6edf3;--text-muted:#8b949e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;font-size:15px;}
+  .sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;z-index:100;padding:24px 0;}
+  .sidebar-logo{padding:0 20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+  .sidebar-logo .title{font-family:'Syne',sans-serif;font-weight:800;font-size:14px;color:var(--blue);letter-spacing:.05em;text-transform:uppercase;}
+  .sidebar-logo .sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+  .nav-section{padding:0 12px;margin-bottom:8px;}
+  .nav-section-title{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;padding:8px 8px 4px;}
+  .nav-link{display:block;padding:6px 8px;border-radius:6px;color:var(--text-muted);text-decoration:none;font-size:13px;transition:all .15s;}
+  .nav-link:hover{background:var(--surface2);color:var(--text);}
+  .nav-link.active{background:var(--blue-dim);color:var(--blue);}
+  .main{margin-left:260px;min-height:100vh;}
+  .hero{background:linear-gradient(135deg,#0d1117 0%,#1a2332 50%,#0d1117 100%);border-bottom:1px solid var(--border);padding:80px 60px 60px;position:relative;overflow:hidden;}
+  .hero::before{content:'';position:absolute;top:-50%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(88,166,255,.08) 0%,transparent 70%);pointer-events:none;}
+  .hero-badge{display:inline-block;background:var(--blue-dim);color:var(--blue);font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;border:1px solid rgba(88,166,255,.3);margin-bottom:20px;font-family:'JetBrains Mono',monospace;letter-spacing:.05em;}
+  .hero h1{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;line-height:1.1;margin-bottom:16px;background:linear-gradient(135deg,#e6edf3 0%,#58a6ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .hero p{font-size:17px;color:var(--text-muted);max-width:600px;margin-bottom:32px;}
+  .hero-stats{display:flex;gap:32px;}
+  .stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--blue);}
+  .stat-label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
+  .content{padding:48px 60px;max-width:900px;}
+  .section{margin-bottom:64px;}
+  h2{font-family:'Syne',sans-serif;font-size:28px;font-weight:700;color:var(--text);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+  h2 .num{background:var(--blue-dim);color:var(--blue);font-size:13px;font-weight:700;padding:2px 10px;border-radius:4px;font-family:'JetBrains Mono',monospace;}
+  h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:600;color:var(--text);margin:32px 0 12px;}
+  p{margin-bottom:12px;color:var(--text-muted);}
+  .info-box{background:var(--blue-dim);border:1px solid rgba(88,166,255,.3);border-left:3px solid var(--blue);border-radius:8px;padding:16px 20px;margin:20px 0;}
+  .info-box .box-title{color:var(--blue);font-weight:600;font-size:13px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+  .info-box p{color:var(--text);margin:0;}
+  .warning-box{background:var(--orange-dim);border:1px solid rgba(210,153,34,.3);border-left:3px solid var(--orange);border-radius:8px;padding:16px 20px;margin:20px 0;}
+  .warning-box .box-title{color:var(--orange);font-weight:600;font-size:13px;margin-bottom:6px;}
+  .warning-box p{color:#e6b85a;margin:0;}
+  .success-box{background:var(--green-dim);border:1px solid rgba(63,185,80,.3);border-left:3px solid var(--green);border-radius:8px;padding:16px 20px;margin:20px 0;}
+  .success-box p{color:var(--green);margin:0;font-weight:500;}
+  .code-block{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin:16px 0;overflow:hidden;}
+  .code-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;}
+  .code-lang{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;}
+  .copy-btn{background:none;border:1px solid var(--border);color:var(--text-muted);padding:3px 10px;border-radius:4px;font-size:11px;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;}
+  .copy-btn:hover{background:var(--surface2);color:var(--text);}
+  .copy-btn.copied{color:var(--green);border-color:var(--green);}
+  pre{padding:20px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;color:var(--text);}
+  .kw{color:#ff7b72;}.str{color:#a5d6ff;}.cm{color:#8b949e;font-style:italic;}.var{color:#ffa657;}.num{color:#79c0ff;}
+  .steps{counter-reset:step;list-style:none;margin:16px 0;}
+  .steps li{counter-increment:step;display:flex;gap:16px;margin-bottom:12px;align-items:flex-start;}
+  .steps li::before{content:counter(step);background:var(--blue-dim);color:var(--blue);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(88,166,255,.3);margin-top:1px;}
+  .steps li p{margin:0;color:var(--text);}
+  .data-table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;}
+  .data-table th{background:var(--blue-dim);color:var(--blue);padding:10px 16px;text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;border:1px solid var(--border);}
+  .data-table td{padding:10px 16px;border:1px solid var(--border);color:var(--text-muted);}
+  .data-table tr:nth-child(even) td{background:var(--surface);}
+  .data-table tr:hover td{background:var(--surface2);color:var(--text);}
+  code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;color:var(--blue);}
+  .profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+  .profile-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;}
+  .profile-card.office{border-top:3px solid var(--blue);}
+  .profile-card.gaming{border-top:3px solid var(--green);}
+  .profile-card h4{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin:0 0 12px;text-transform:none;letter-spacing:0;}
+  .profile-card.office h4{color:var(--blue);}
+  .profile-card.gaming h4{color:var(--green);}
+  .profile-stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .profile-stat:last-child{border-bottom:none;}
+  .profile-stat .key{color:var(--text-muted);}
+  .profile-stat .val{color:var(--text);font-weight:500;}
+  .illustration{margin:24px 0;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+  .illustration-caption{background:var(--surface2);padding:8px 16px;font-size:12px;color:var(--text-muted);border-top:1px solid var(--border);text-align:center;}
+  .flow{display:flex;flex-direction:column;align-items:center;padding:32px;background:var(--surface);gap:4px;}
+  .flow-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 24px;font-size:13px;font-weight:500;text-align:center;min-width:240px;}
+  .flow-box.blue{border-color:rgba(88,166,255,.5);color:var(--blue);background:var(--blue-dim);}
+  .flow-box.green{border-color:rgba(63,185,80,.5);color:var(--green);background:var(--green-dim);}
+  .flow-box.gray{border-color:var(--border);color:var(--text-muted);}
+  .flow-arrow{color:var(--text-muted);font-size:20px;line-height:1.2;}
+  .flow-label{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;}
+  .flow-branch{display:flex;gap:48px;align-items:flex-start;margin:4px 0;}
+  .flow-branch-col{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .win-window{background:#1e1e1e;border:1px solid #3a3a3a;border-radius:6px;overflow:hidden;font-family:'Segoe UI',sans-serif;}
+  .win-titlebar{background:#2d2d2d;padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #3a3a3a;}
+  .win-btn{width:12px;height:12px;border-radius:50%;}
+  .win-btn.r{background:#ff5f57;}.win-btn.y{background:#febc2e;}.win-btn.g{background:#28c840;}
+  .win-title-text{font-size:12px;color:#ccc;margin-left:8px;}
+  .win-menubar{background:#252525;padding:4px 12px;display:flex;gap:16px;border-bottom:1px solid #3a3a3a;}
+  .win-menu{font-size:12px;color:#aaa;padding:4px 8px;border-radius:3px;cursor:pointer;}
+  .win-menu.active{background:#0078d4;color:white;}
+  .win-body{padding:16px;background:#1e1e1e;}
+  .win-row{display:flex;align-items:center;gap:12px;padding:7px 8px;border-radius:4px;font-size:13px;color:#ddd;}
+  .win-row:hover{background:#2a2a2a;}
+  .win-row.highlight{background:#0078d420;border-left:2px solid #0078d4;}
+  .cb-box{width:16px;height:16px;border:2px solid #0078d4;border-radius:2px;background:#0078d4;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .cb-box::after{content:'✓';color:white;font-size:10px;font-weight:bold;}
+  .cb-box.off{background:transparent;border-color:#555;}
+  .cb-box.off::after{display:none;}
+  .file-list{background:#252525;border:1px solid #3a3a3a;border-radius:4px;overflow:hidden;}
+  .file-header{background:#2d2d2d;padding:6px 12px;font-size:11px;color:#888;display:flex;gap:16px;border-bottom:1px solid #3a3a3a;}
+  .file-row{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid #333;font-size:13px;color:#ddd;}
+  .file-row:last-child{border-bottom:none;}
+  .file-row:hover{background:#2a2a2a;}
+  .tp-win{background:#f0f0f0;font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#000;border-radius:4px;overflow:hidden;}
+  .tp-title{background:#0078d4;color:white;padding:7px 14px;font-size:12px;display:flex;align-items:center;gap:8px;}
+  .tp-tabs{display:flex;background:#e0e0e0;border-bottom:1px solid #bbb;}
+  .tp-tab{padding:7px 16px;font-size:12px;cursor:pointer;border-right:1px solid #bbb;}
+  .tp-tab.active{background:#fafafa;border-bottom:2px solid #0078d4;color:#0078d4;font-weight:600;}
+  .tp-body{padding:16px;background:#fafafa;}
+  .tp-label{font-weight:600;font-size:11px;color:#333;margin-top:10px;margin-bottom:3px;}
+  .tp-input{background:white;border:1px solid #999;padding:5px 8px;border-radius:2px;font-size:12px;color:#333;width:100%;display:block;margin-bottom:2px;font-family:'Segoe UI',sans-serif;}
+  .tp-hint{font-size:10px;color:#0078d4;margin-bottom:6px;}
+  .tp-check{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:12px;color:#333;}
+  .tp-cb{width:13px;height:13px;border:1px solid #666;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;background:white;}
+  .tp-cb.on{background:#0078d4;border-color:#0078d4;color:white;font-size:9px;}
+  .footer{border-top:1px solid var(--border);padding:24px 60px;color:var(--text-muted);font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+  @media(max-width:900px){.sidebar{display:none;}.main{margin-left:0;}.hero,.content{padding:32px 24px;}.profile-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="title">Power Profile Watcher</div>
+    <div class="sub">Windows 11 CPU Management</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Introduction</div>
+    <a href="#overview" class="nav-link">Overview & Flow</a>
+    <a href="#requirements" class="nav-link">Requirements</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Preparation</div>
+    <a href="#fileext" class="nav-link">Show File Extensions</a>
+    <a href="#createps1" class="nav-link">Create .ps1 Files</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Scripts</div>
+    <a href="#office" class="nav-link">office.ps1</a>
+    <a href="#gaming" class="nav-link">gaming.ps1</a>
+    <a href="#watcher" class="nav-link">watcher.ps1</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Setup</div>
+    <a href="#taskscheduler" class="nav-link">Task Scheduler</a>
+    <a href="#policy" class="nav-link">Execution Policy</a>
+    <a href="#test" class="nav-link">Testing</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-title">Reference</div>
+    <a href="#troubleshooting" class="nav-link">Troubleshooting</a>
+    <a href="#commands" class="nav-link">Command Reference</a>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="hero">
+    <div class="hero-badge">// PowerShell 7 + NVML</div>
+    <h1>Power Profile Watcher</h1>
+    <p>Automatic CPU power management for Windows 11. Quiet and efficient in Office mode, full boost performance during gaming – completely automatic.</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-value">3</div><div class="stat-label">Scripts</div></div>
+      <div class="stat"><div class="stat-value">~2s</div><div class="stat-label">Detection Time</div></div>
+      <div class="stat"><div class="stat-value">0</div><div class="stat-label">Manual Effort</div></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="section" id="overview">
+      <h2><span class="num">00</span> How Does It Work?</h2>
+      <div class="info-box">
+        <div class="box-title">How It Works</div>
+        <p>A watcher runs permanently in the background and reads the NVIDIA dGPU load every 500ms. When stable GPU load is detected (e.g. from a game), it automatically switches to the Gaming profile with full CPU boost. After closing the game, it returns to the Office profile.</p>
+      </div>
+
+      <div class="illustration">
+        <div class="flow">
+          <div class="flow-box blue">🚀 Windows Starts</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box gray">Task Scheduler launches Watcher (15s delay)</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box gray">Watcher waits for NVIDIA driver</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box blue">🔵 Office Profile active &nbsp;·&nbsp; CPU 80% &nbsp;·&nbsp; Boost locked &nbsp;·&nbsp; quiet</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-box gray">Measure GPU load every 500ms</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-branch">
+            <div class="flow-branch-col">
+              <div class="flow-label">GPU ≥ 5% for ~2 sec</div>
+              <div class="flow-box green">🟢 Gaming Profile<br><small style="font-weight:400;font-size:11px">CPU 100% · Boost unlocked · full performance</small></div>
+              <div class="flow-arrow">↓</div>
+              <div class="flow-label">GPU ≤ 1% for ~6 sec</div>
+              <div class="flow-arrow">↑</div>
+              <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace">back to Office</div>
+            </div>
+            <div class="flow-branch-col" style="padding-top:32px">
+              <div style="color:var(--text-muted);font-size:12px;text-align:center;max-width:130px;padding:12px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)">No stable load → no switch</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:12px;font-family:'JetBrains Mono',monospace">↺ Continuous loop – runs in background</div>
+        </div>
+        <div class="illustration-caption">Fig. 1 – Automatic flow of the Power Profile Watcher</div>
+      </div>
+
+      <div class="profile-grid">
+        <div class="profile-card office">
+          <h4>🔵 Office Profile</h4>
+          <div class="profile-stat"><span class="key">CPU Maximum</span><span class="val">80% (~2.0 GHz)</span></div>
+          <div class="profile-stat"><span class="key">Boost</span><span class="val">Locked</span></div>
+          <div class="profile-stat"><span class="key">EPP AC/DC</span><span class="val">60 / 80</span></div>
+          <div class="profile-stat"><span class="key">Fan noise</span><span class="val">Quiet</span></div>
+          <div class="profile-stat"><span class="key">Best for</span><span class="val">Browser, YouTube, Office apps</span></div>
+        </div>
+        <div class="profile-card gaming">
+          <h4>🟢 Gaming Profile</h4>
+          <div class="profile-stat"><span class="key">CPU Maximum</span><span class="val">100% + Boost</span></div>
+          <div class="profile-stat"><span class="key">Boost</span><span class="val">Unlocked</span></div>
+          <div class="profile-stat"><span class="key">EPP</span><span class="val">0 (maximum performance)</span></div>
+          <div class="profile-stat"><span class="key">Power scheme</span><span class="val">Ultimate Performance</span></div>
+          <div class="profile-stat"><span class="key">Best for</span><span class="val">Games, rendering</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REQUIREMENTS -->
+    <div class="section" id="requirements">
+      <h2><span class="num">01</span> Requirements & Gathering Info</h2>
+      <table class="data-table">
+        <thead><tr><th>Component</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td>Operating System</td><td>Windows 10 / Windows 11</td></tr>
+          <tr><td>GPU</td><td>NVIDIA dGPU (RTX 3060, 4070, etc.)</td></tr>
+          <tr><td>PowerShell</td><td>Version 7 (pwsh.exe) – free from Microsoft</td></tr>
+          <tr><td>Permissions</td><td>Administrator rights required</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Install PowerShell 7</h3>
+      <ol class="steps">
+        <li><p>Go to <a href="https://github.com/PowerShell/PowerShell/releases" style="color:var(--blue)">github.com/PowerShell/PowerShell/releases</a></p></li>
+        <li><p>Download the latest <code>.msi</code> file for Windows (x64)</p></li>
+        <li><p>Install with default settings</p></li>
+      </ol>
+
+      <h3>Find Your NVML Path</h3>
+      <p>Open PowerShell 7 as Administrator and run:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell 7 (Admin)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>Get-ChildItem <span class="str">"C:\Windows\System32\DriverStore\FileRepository\"</span> -Filter <span class="str">"nvml.dll"</span> -Recurse -ErrorAction SilentlyContinue | Select-Object FullName</pre>
+      </div>
+      <p>Example output: <code>C:\Windows\System32\DriverStore\FileRepository\nvmii.inf_amd64_XXXXXXXX\nvml.dll</code> – note this path down.</p>
+
+      <h3>Find Your Power Scheme GUID</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>powercfg /list</pre>
+      </div>
+      <p>Note the GUID of the scheme marked with <code>*</code> (Balanced), e.g. <code>3f43ac0d-b402-4072-82c5-4e490233737a</code></p>
+    </div>
+
+    <!-- FILE EXTENSIONS -->
+    <div class="section" id="fileext">
+      <h2><span class="num">02</span> Enable File Extensions</h2>
+      <p>To save a file as <code>.ps1</code>, file extensions must be visible in Windows Explorer.</p>
+
+      <div class="warning-box">
+        <div class="box-title">⚠ Important – this step is required</div>
+        <p>If file extensions are hidden, Windows creates a file named <code>office.ps1.txt</code> instead of <code>office.ps1</code> – PowerShell cannot execute it.</p>
+      </div>
+
+      <ol class="steps">
+        <li><p>Open <strong>Windows Explorer</strong> (Windows key + E)</p></li>
+        <li><p>Click <strong>"View"</strong> at the top</p></li>
+        <li><p>Click <strong>"Show"</strong></p></li>
+        <li><p>Check <strong>"File name extensions"</strong></p></li>
+      </ol>
+
+      <div class="illustration">
+        <div class="win-window">
+          <div class="win-titlebar">
+            <div class="win-btn r"></div><div class="win-btn y"></div><div class="win-btn g"></div>
+            <div class="win-title-text">📁 This PC – Windows Explorer</div>
+          </div>
+          <div class="win-menubar">
+            <div class="win-menu">File</div>
+            <div class="win-menu">Home</div>
+            <div class="win-menu">Share</div>
+            <div class="win-menu active">View ▾</div>
+          </div>
+          <div class="win-body" style="background:#222;padding:0">
+            <div style="background:#2a2a2a;border:1px solid #444;margin:10px;border-radius:4px;overflow:hidden">
+              <div style="padding:8px 12px;font-size:11px;color:#888;background:#252525;border-bottom:1px solid #333">Show</div>
+              <div class="win-row"><div class="cb-box off"></div> Navigation pane</div>
+              <div class="win-row"><div class="cb-box off"></div> Preview pane</div>
+              <div class="win-row"><div class="cb-box off"></div> Details pane</div>
+              <div style="height:1px;background:#333;margin:4px 0"></div>
+              <div class="win-row highlight">
+                <div class="cb-box"></div>
+                <span style="color:#4fc3f7;font-weight:600">File name extensions</span>
+                <span style="color:#f85149;font-size:11px;margin-left:auto;font-weight:600">← Enable this!</span>
+              </div>
+              <div class="win-row"><div class="cb-box off"></div> Hidden items</div>
+            </div>
+          </div>
+        </div>
+        <div class="illustration-caption">Fig. 2 – Explorer → View → Show → File name extensions</div>
+      </div>
+
+      <div class="success-box"><p>✓ You will now see the extension on all files: <code>office.ps1</code> instead of just <code>office</code></p></div>
+    </div>
+
+    <!-- CREATE PS1 -->
+    <div class="section" id="createps1">
+      <h2><span class="num">03</span> Create .ps1 Files</h2>
+      <p>A <code>.ps1</code> file is simply a text file with the <code>.ps1</code> extension. It can be created with the standard Windows Notepad.</p>
+
+      <h3>Step 1: Create the C:\Scripts folder</h3>
+      <ol class="steps">
+        <li><p>Open Windows Explorer</p></li>
+        <li><p>Click <strong>"This PC"</strong> on the left → open drive <strong>C:</strong></p></li>
+        <li><p>Right-click on empty space → <strong>New → Folder</strong></p></li>
+        <li><p>Type: <code>Scripts</code> → Enter</p></li>
+      </ol>
+
+      <h3>Step 2: Create the script files</h3>
+      <p>Repeat this process <strong>three times</strong> – for <code>office.ps1</code>, <code>gaming.ps1</code> and <code>watcher.ps1</code>:</p>
+      <ol class="steps">
+        <li><p>Open the <code>C:\Scripts</code> folder</p></li>
+        <li><p>Right-click on empty space → <strong>New → Text Document</strong></p></li>
+        <li><p>Type the filename: <code>office.ps1</code> (replacing the <code>.txt</code> extension with <code>.ps1</code>)</p></li>
+        <li><p>Windows asks: "Change file extension?" → Click <strong>Yes</strong></p></li>
+        <li><p>Double-click the file → it opens in Notepad</p></li>
+        <li><p>Paste the script content (from the next chapters) → <strong>Ctrl+S</strong> to save</p></li>
+      </ol>
+
+      <div class="illustration">
+        <div class="win-window">
+          <div class="win-titlebar">
+            <div class="win-btn r"></div><div class="win-btn y"></div><div class="win-btn g"></div>
+            <div class="win-title-text">📁 C:\Scripts – what it should look like</div>
+          </div>
+          <div class="win-body" style="padding:0">
+            <div class="file-list">
+              <div class="file-header">
+                <span style="flex:1">Name</span>
+                <span>Type</span>
+                <span style="margin-left:32px">Size</span>
+              </div>
+              <div class="file-row">
+                <span style="font-size:18px">📄</span>
+                <span style="color:#4fc3f7;flex:1">office<span style="color:#888">.ps1</span></span>
+                <span style="color:#888;font-size:12px">PowerShell Script</span>
+                <span style="color:#666;font-size:12px;margin-left:32px">1 KB</span>
+              </div>
+              <div class="file-row">
+                <span style="font-size:18px">📄</span>
+                <span style="color:#4fc3f7;flex:1">gaming<span style="color:#888">.ps1</span></span>
+                <span style="color:#888;font-size:12px">PowerShell Script</span>
+                <span style="color:#666;font-size:12px;margin-left:32px">1 KB</span>
+              </div>
+              <div class="file-row">
+                <span style="font-size:18px">📄</span>
+                <span style="color:#4fc3f7;flex:1">watcher<span style="color:#888">.ps1</span></span>
+                <span style="color:#888;font-size:12px">PowerShell Script</span>
+                <span style="color:#666;font-size:12px;margin-left:32px">3 KB</span>
+              </div>
+              <div style="padding:10px 12px;background:#1a2a1a;border-top:1px dashed #3fb950;font-size:12px;color:#3fb950">
+                ✓ All three files present – ready for the next step
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="illustration-caption">Fig. 3 – C:\Scripts folder with all three .ps1 files</div>
+      </div>
+
+      <div class="warning-box">
+        <div class="box-title">⚠ Common mistake: file is named office.ps1.txt</div>
+        <p>If the file is named <code>office.ps1.txt</code> instead of <code>office.ps1</code>, file extensions were not enabled (Step 02). Enable file extensions, then rename the file and remove the <code>.txt</code> at the end.</p>
+      </div>
+    </div>
+
+    <!-- OFFICE -->
+    <div class="section" id="office">
+      <h2><span class="num">04</span> office.ps1 – Content</h2>
+      <p>Open <code>C:\Scripts\office.ps1</code> in Notepad, delete everything and paste the following content.</p>
+      <div class="info-box">
+        <div class="box-title">📁 File Location</div>
+        <p>File: <code>C:\Scripts\office.ps1</code></p>
+      </div>
+      <div class="warning-box">
+        <div class="box-title">⚠ Customization required</div>
+        <p>Replace <code>YOUR-GUID-HERE</code> with your GUID from Step 01 (powercfg /list).</p>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">office.ps1</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cm"># Office Profile: CPU throttled, quiet, energy efficient</span>
+$host.UI.RawUI.WindowTitle = <span class="str">"Office Profile"</span>
+
+<span class="kw">if</span> (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host <span class="str">"ERROR: Script must be run as Administrator!"</span> -ForegroundColor Red
+    <span class="kw">exit</span> <span class="num">1</span>
+}
+
+<span class="cm"># Enter your Balanced power scheme GUID here:</span>
+<span class="var">$SchemaGUID</span> = <span class="str">"YOUR-GUID-HERE"</span>
+
+powercfg /setactive <span class="var">$SchemaGUID</span>
+
+<span class="cm"># Max CPU state: 80% -> Boost locked, max ~2.0 GHz</span>
+powercfg -setacvalueindex <span class="var">$SchemaGUID</span> sub_processor PROCTHROTTLEMAX <span class="num">80</span>
+powercfg -setdcvalueindex <span class="var">$SchemaGUID</span> sub_processor PROCTHROTTLEMAX <span class="num">80</span>
+
+<span class="cm"># Min CPU state: 5%</span>
+powercfg -setacvalueindex <span class="var">$SchemaGUID</span> sub_processor PROCTHROTTLEMIN <span class="num">5</span>
+powercfg -setdcvalueindex <span class="var">$SchemaGUID</span> sub_processor PROCTHROTTLEMIN <span class="num">5</span>
+
+<span class="cm"># EPP: AC=60 (moderate), DC=80 (battery saving)</span>
+powercfg -setacvalueindex <span class="var">$SchemaGUID</span> sub_processor PERFEPP <span class="num">60</span>
+powercfg -setdcvalueindex <span class="var">$SchemaGUID</span> sub_processor PERFEPP <span class="num">80</span>
+
+powercfg /setactive <span class="var">$SchemaGUID</span>
+Write-Host <span class="str">"Office Profile active: 80% Max CPU, Boost locked, EPP 60/80."</span> -ForegroundColor Green</pre>
+      </div>
+    </div>
+
+    <!-- GAMING -->
+    <div class="section" id="gaming">
+      <h2><span class="num">05</span> gaming.ps1 – Content</h2>
+      <p>This script creates a fresh "Ultimate Performance" scheme on every call. <strong>No customization needed</strong> – paste as-is.</p>
+      <div class="info-box">
+        <div class="box-title">📁 File Location</div>
+        <p>File: <code>C:\Scripts\gaming.ps1</code></p>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">gaming.ps1</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cm"># Gaming Profile: Full boost, maximum performance</span>
+$host.UI.RawUI.WindowTitle = <span class="str">"Gaming Profile"</span>
+
+<span class="kw">if</span> (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host <span class="str">"ERROR: Script must be run as Administrator!"</span> -ForegroundColor Red
+    <span class="kw">exit</span> <span class="num">1</span>
+}
+
+<span class="cm"># Clean up old gaming schemes (prevents accumulation)</span>
+<span class="var">$allSchemes</span> = powercfg /list
+<span class="kw">foreach</span> (<span class="var">$line</span> <span class="kw">in</span> <span class="var">$allSchemes</span>) {
+    <span class="kw">if</span> (<span class="var">$line</span> -match <span class="str">"([a-f0-9\-]{36}).*(Ultimate Performance|Ultimative Leistung)"</span>) {
+        <span class="var">$oldGUID</span> = <span class="var">$matches</span>[<span class="num">1</span>]
+        Write-Host <span class="str">"Deleting old scheme: $oldGUID"</span> -ForegroundColor Yellow
+        powercfg -delete <span class="var">$oldGUID</span>
+    }
+}
+
+<span class="cm"># Create new Ultimate Performance scheme</span>
+<span class="var">$output</span> = powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
+<span class="var">$GamingSchemeGUID</span> = (<span class="var">$output</span> | Select-String <span class="str">"GUID.*:\s+(\S+)"</span>).Matches.Groups[<span class="num">1</span>].Value
+Write-Host <span class="str">"Gaming scheme created: $GamingSchemeGUID"</span> -ForegroundColor Yellow
+
+powercfg -setacvalueindex <span class="var">$GamingSchemeGUID</span> sub_processor PROCTHROTTLEMAX <span class="num">100</span>
+powercfg -setdcvalueindex <span class="var">$GamingSchemeGUID</span> sub_processor PROCTHROTTLEMAX <span class="num">100</span>
+powercfg -setacvalueindex <span class="var">$GamingSchemeGUID</span> sub_processor PROCTHROTTLEMIN <span class="num">10</span>
+powercfg -setdcvalueindex <span class="var">$GamingSchemeGUID</span> sub_processor PROCTHROTTLEMIN <span class="num">10</span>
+powercfg -setacvalueindex <span class="var">$GamingSchemeGUID</span> sub_processor PERFEPP <span class="num">0</span>
+powercfg -setdcvalueindex <span class="var">$GamingSchemeGUID</span> sub_processor PERFEPP <span class="num">0</span>
+
+powercfg /setactive <span class="var">$GamingSchemeGUID</span>
+Write-Host <span class="str">"Gaming Profile active: Boost unlocked, EPP 0."</span> -ForegroundColor Green</pre>
+      </div>
+    </div>
+
+    <!-- WATCHER -->
+    <div class="section" id="watcher">
+      <h2><span class="num">06</span> watcher.ps1 – Content</h2>
+      <div class="info-box">
+        <div class="box-title">📁 File Location</div>
+        <p>File: <code>C:\Scripts\watcher.ps1</code></p>
+      </div>
+      <div class="warning-box">
+        <div class="box-title">⚠ Two places to customize</div>
+        <p>1. Replace <code>YOUR-NVML-PATH-HERE</code> with the path from Step 01.<br>
+        2. Replace <code>YOUR-OFFICE-GUID-HERE</code> with your GUID from Step 01.</p>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">watcher.ps1</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cm"># Wait for NVIDIA driver (nvcontainer OR NVChecker)</span>
+<span class="kw">while</span> (-not (Get-Process -Name <span class="str">"nvcontainer"</span> -ErrorAction SilentlyContinue) -and `
+      -not (Get-Process -Name <span class="str">"NVChecker"</span> -ErrorAction SilentlyContinue)) {
+    Start-Sleep -Seconds <span class="num">1</span>
+}
+Start-Sleep -Seconds <span class="num">2</span>
+
+$host.UI.RawUI.WindowTitle = <span class="str">"Power Profile Watcher (NVML dGPU)"</span>
+
+<span class="cm"># Ensure Office scheme is active on startup</span>
+powercfg /setactive <span class="str">"YOUR-OFFICE-GUID-HERE"</span>
+
+<span class="cm"># CUSTOMIZE THESE:</span>
+<span class="var">$OfficeScript</span> = <span class="str">"C:\Scripts\office.ps1"</span>
+<span class="var">$GamingScript</span> = <span class="str">"C:\Scripts\gaming.ps1"</span>
+<span class="var">$NvmlPath</span>     = <span class="str">"YOUR-NVML-PATH-HERE"</span>
+
+<span class="cm"># Thresholds (GPU load in %)</span>
+<span class="var">$GamingThreshold</span>     = <span class="num">5</span>   <span class="cm"># Above this -> Gaming counter increments</span>
+<span class="var">$OfficeThreshold</span>     = <span class="num">1</span>   <span class="cm"># Below this -> Office counter increments</span>
+<span class="var">$RequiredGamingReads</span> = <span class="num">4</span>   <span class="cm"># ~2 seconds stable load to switch to Gaming</span>
+<span class="var">$RequiredOfficeReads</span> = <span class="num">12</span>  <span class="cm"># ~6 seconds stable idle to switch to Office</span>
+<span class="var">$CooldownSeconds</span>     = <span class="num">10</span>  <span class="cm"># Wait time after a switch</span>
+
+<span class="var">$LastSwitch</span>    = (Get-Date).AddSeconds(-<span class="var">$CooldownSeconds</span>)
+<span class="var">$GamingCounter</span> = <span class="num">0</span>
+<span class="var">$OfficeCounter</span>  = <span class="num">0</span>
+<span class="var">$CurrentMode</span>   = <span class="str">"Office"</span>
+
+<span class="var">$nvmlCode</span> = @<span class="str">"
+using System;
+using System.Runtime.InteropServices;
+public enum nvmlReturn_t { NVML_SUCCESS = 0 }
+[StructLayout(LayoutKind.Sequential)]
+public struct nvmlUtilization_t { public uint gpu; public uint memory; }
+public static class NVML {
+    [DllImport(@"{PATH}", CallingConvention = CallingConvention.Cdecl)]
+    public static extern nvmlReturn_t nvmlInit_v2();
+    [DllImport(@"{PATH}", CallingConvention = CallingConvention.Cdecl)]
+    public static extern nvmlReturn_t nvmlShutdown();
+    [DllImport(@"{PATH}", CallingConvention = CallingConvention.Cdecl)]
+    public static extern nvmlReturn_t nvmlDeviceGetHandleByIndex_v2(uint index, out IntPtr device);
+    [DllImport(@"{PATH}", CallingConvention = CallingConvention.Cdecl)]
+    public static extern nvmlReturn_t nvmlDeviceGetUtilizationRates(IntPtr device, out nvmlUtilization_t utilization);
+}
+"@</span>.Replace(<span class="str">"{PATH}"</span>, <span class="var">$NvmlPath</span>.Replace(<span class="str">"\"</span>, <span class="str">"\\"</span>))
+
+Add-Type -TypeDefinition <span class="var">$nvmlCode</span> -ErrorAction Stop
+
+<span class="var">$result</span> = [NVML]::nvmlInit_v2()
+<span class="kw">if</span> (<span class="var">$result</span> -ne [nvmlReturn_t]::NVML_SUCCESS) { Write-Host <span class="str">"NVML init failed."</span>; <span class="kw">exit</span> <span class="num">1</span> }
+
+<span class="var">$device</span> = [IntPtr]::Zero
+<span class="var">$result</span>  = [NVML]::nvmlDeviceGetHandleByIndex_v2(<span class="num">0</span>, [ref]<span class="var">$device</span>)
+<span class="kw">if</span> (<span class="var">$result</span> -ne [nvmlReturn_t]::NVML_SUCCESS) { [NVML]::nvmlShutdown() | Out-Null; <span class="kw">exit</span> <span class="num">1</span> }
+
+Write-Host <span class="str">"Watcher started. Gaming: $RequiredGamingReads reads | Office: $RequiredOfficeReads reads | Cooldown: ${CooldownSeconds}s"</span>
+
+<span class="kw">try</span> {
+    <span class="kw">while</span> (<span class="var">$true</span>) {
+        <span class="var">$util</span>   = New-Object nvmlUtilization_t
+        <span class="var">$result</span> = [NVML]::nvmlDeviceGetUtilizationRates(<span class="var">$device</span>, [ref]<span class="var">$util</span>)
+        <span class="kw">if</span> (<span class="var">$result</span> -eq [nvmlReturn_t]::NVML_SUCCESS) {
+            <span class="var">$gpuLoad</span>            = [int]<span class="var">$util</span>.gpu
+            <span class="var">$SecondsSinceSwitch</span> = ((Get-Date) - <span class="var">$LastSwitch</span>).TotalSeconds
+            <span class="var">$CooldownActive</span>     = <span class="var">$SecondsSinceSwitch</span> -lt <span class="var">$CooldownSeconds</span>
+            <span class="kw">if</span> (<span class="var">$gpuLoad</span> -ge <span class="var">$GamingThreshold</span>) { <span class="var">$GamingCounter</span>++; <span class="var">$OfficeCounter</span> = <span class="num">0</span> }
+            <span class="kw">elseif</span> (<span class="var">$gpuLoad</span> -le <span class="var">$OfficeThreshold</span>) { <span class="var">$OfficeCounter</span>++; <span class="var">$GamingCounter</span> = <span class="num">0</span> }
+            <span class="var">$cd</span> = <span class="kw">if</span> (<span class="var">$CooldownActive</span>) { <span class="str">" [Cooldown: $([math]::Round($CooldownSeconds - $SecondsSinceSwitch,1))s]"</span> } <span class="kw">else</span> { <span class="str">""</span> }
+            Write-Host <span class="str">"GPU: $gpuLoad% | $CurrentMode | G:$GamingCounter/$RequiredGamingReads O:$OfficeCounter/$RequiredOfficeReads$cd"</span>
+            <span class="kw">if</span> (-not <span class="var">$CooldownActive</span>) {
+                <span class="kw">if</span> (<span class="var">$GamingCounter</span> -ge <span class="var">$RequiredGamingReads</span> -and <span class="var">$CurrentMode</span> -ne <span class="str">"Gaming"</span>) {
+                    Write-Host <span class="str">">>> Switching to Gaming Profile"</span> -ForegroundColor Green
+                    & <span class="var">$GamingScript</span>
+                    <span class="var">$CurrentMode</span> = <span class="str">"Gaming"</span>; <span class="var">$LastSwitch</span> = Get-Date
+                    <span class="var">$GamingCounter</span> = <span class="num">0</span>; <span class="var">$OfficeCounter</span> = <span class="num">0</span>
+                }
+                <span class="kw">if</span> (<span class="var">$OfficeCounter</span> -ge <span class="var">$RequiredOfficeReads</span> -and <span class="var">$CurrentMode</span> -ne <span class="str">"Office"</span>) {
+                    Write-Host <span class="str">">>> Switching to Office Profile"</span> -ForegroundColor Cyan
+                    & <span class="var">$OfficeScript</span>
+                    <span class="var">$CurrentMode</span> = <span class="str">"Office"</span>; <span class="var">$LastSwitch</span> = Get-Date
+                    <span class="var">$GamingCounter</span> = <span class="num">0</span>; <span class="var">$OfficeCounter</span> = <span class="num">0</span>
+                }
+            }
+        }
+        Start-Sleep -Milliseconds <span class="num">500</span>
+    }
+} <span class="kw">finally</span> { [NVML]::nvmlShutdown() | Out-Null }</pre>
+      </div>
+    </div>
+
+    <!-- TASK SCHEDULER -->
+    <div class="section" id="taskscheduler">
+      <h2><span class="num">07</span> Task Scheduler Setup</h2>
+      <p>Open Task Scheduler: <code>Win + R</code> → <code>taskschd.msc</code> → Enter.</p>
+
+      <h3>Task 1: Office on Login (PowerProfileOffice_Start)</h3>
+      <ol class="steps">
+        <li><p>Right-click on "Task Scheduler Library" → <strong>Create Basic Task</strong></p></li>
+        <li><p>Name: <code>PowerProfileOffice_Start</code> → Next</p></li>
+        <li><p>Trigger: <strong>When I log on</strong> → Next</p></li>
+        <li><p>Action: <strong>Start a program</strong> → Next</p></li>
+        <li><p>Program/script: <code>pwsh.exe</code></p></li>
+        <li><p>Arguments: <code>-ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Scripts\office.ps1"</code></p></li>
+        <li><p>Start in: <code>C:\Program Files\PowerShell\7</code></p></li>
+        <li><p>Finish → check <strong>"Open the Properties dialog"</strong> → Finish</p></li>
+        <li><p>Tab "General" → check <strong>"Run with highest privileges"</strong></p></li>
+        <li><p>Tab "Triggers" → double-click trigger → enable Delay → type <strong>15 seconds</strong> → OK → OK</p></li>
+      </ol>
+
+      <h3>Task 2: Watcher at Startup (PowerProfileWatcher_PS7)</h3>
+      <ol class="steps">
+        <li><p>Right-click on "Task Scheduler Library" → <strong>Create Basic Task</strong></p></li>
+        <li><p>Name: <code>PowerProfileWatcher_PS7</code> → Next</p></li>
+        <li><p>Trigger: <strong>When the computer starts</strong> → Next</p></li>
+        <li><p>Action: <strong>Start a program</strong> → Next</p></li>
+        <li><p>Program/script: <code>C:\PROGRA~1\PowerShell\7\pwsh.exe</code> <em style="color:var(--text-muted);font-size:12px">(short path – no space issues)</em></p></li>
+        <li><p>Arguments: <code>-ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Scripts\watcher.ps1"</code></p></li>
+        <li><p>Finish → check <strong>"Open the Properties dialog"</strong> → Finish</p></li>
+        <li><p>Tab "General" → change user to <strong>your own account</strong> (not SYSTEM) → check <strong>"Run with highest privileges"</strong></p></li>
+        <li><p>Tab "Triggers" → double-click → enable Delay → type <strong>15 seconds</strong> → OK → OK</p></li>
+      </ol>
+
+      <div class="illustration">
+        <div class="tp-win">
+          <div class="tp-title">🗓 Create Task – PowerProfileWatcher_PS7</div>
+          <div class="tp-tabs">
+            <div class="tp-tab active">General</div>
+            <div class="tp-tab">Triggers</div>
+            <div class="tp-tab">Actions</div>
+            <div class="tp-tab">Conditions</div>
+            <div class="tp-tab">Settings</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0">
+            <div class="tp-body" style="border-right:1px solid #ccc">
+              <div class="tp-label">Name:</div>
+              <div class="tp-input">PowerProfileWatcher_PS7</div>
+              <div class="tp-label" style="margin-top:16px">Security options:</div>
+              <div class="tp-check">
+                <div class="tp-cb on">✓</div>
+                <span style="color:#0078d4;font-weight:600">Run with highest privileges</span>
+              </div>
+              <div class="tp-check">
+                <div class="tp-cb on">✓</div>
+                <span>Run only when user is logged on</span>
+              </div>
+              <div class="tp-label">User account:</div>
+              <div class="tp-input" style="color:#0078d4">YOURPC\YourUsername</div>
+              <div class="tp-hint">← Enter your own account, not SYSTEM</div>
+            </div>
+            <div class="tp-body">
+              <div style="font-weight:600;color:#0078d4;font-size:11px;margin-bottom:8px">Action:</div>
+              <div class="tp-label">Program/script:</div>
+              <div class="tp-input" style="font-size:11px">C:\PROGRA~1\PowerShell\7\pwsh.exe</div>
+              <div class="tp-hint">← Short path to avoid space issues!</div>
+              <div class="tp-label">Arguments:</div>
+              <div class="tp-input" style="font-size:10px;word-break:break-all">-ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\Scripts\watcher.ps1"</div>
+              <div style="margin-top:16px;font-weight:600;color:#0078d4;font-size:11px">Trigger:</div>
+              <div style="background:white;border:1px solid #ccc;padding:8px;border-radius:2px;margin-top:4px;font-size:11px">
+                <div style="color:#155724;font-weight:600">✓ At startup – Delay: 15 seconds</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="illustration-caption">Fig. 4 – Correct settings for the Watcher task in Task Scheduler</div>
+      </div>
+
+      <div class="warning-box">
+        <div class="box-title">⚠ Important</div>
+        <p>Both tasks must run under your own user account (not SYSTEM) and "Run with highest privileges" must be checked. Otherwise the powercfg commands fail silently without any error message.</p>
+      </div>
+    </div>
+
+    <!-- EXECUTION POLICY -->
+    <div class="section" id="policy">
+      <h2><span class="num">08</span> Set Execution Policy</h2>
+      <p>Run this once in an Admin PowerShell 7. Without this setting, Windows will refuse to run the scripts.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell 7 (once – Admin)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine</pre>
+      </div>
+      <p>Confirm with <code>Y</code>. This setting is saved permanently.</p>
+      <div class="success-box"><p>✓ After this, all scripts can be executed without any restrictions.</p></div>
+    </div>
+
+    <!-- TEST -->
+    <div class="section" id="test">
+      <h2><span class="num">09</span> Testing</h2>
+      <h3>Manual Test</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell 7 (Admin)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="cm"># Test Office profile – CPU should drop to ~80% of base clock</span>
+& <span class="str">"C:\Scripts\office.ps1"</span>
+
+<span class="cm"># Test Gaming profile – CPU should be able to boost</span>
+& <span class="str">"C:\Scripts\gaming.ps1"</span>
+
+<span class="cm"># Start Watcher manually (visible output for testing)</span>
+& <span class="str">"C:\Scripts\watcher.ps1"</span></pre>
+      </div>
+      <h3>Verify Autostart After Reboot</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>Get-Process -Name <span class="str">"pwsh"</span> | Format-Table Id, CPU, StartTime -AutoSize</pre>
+      </div>
+      <p>Two processes in the output = Watcher is running in the background ✓</p>
+    </div>
+
+    <!-- TROUBLESHOOTING -->
+    <div class="section" id="troubleshooting">
+      <h2><span class="num">10</span> Troubleshooting</h2>
+
+      <h3>Watcher doesn't start / black window</h3>
+      <p>NVIDIA driver process is not running yet. Check which processes are active:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>Get-Process | Where-Object { $_.Name -like <span class="str">"*nv*"</span> } | Format-Table Name, Id</pre>
+      </div>
+
+      <h3>Script won't run (security error)</h3>
+      <p>Execution Policy is missing → run Step 08.</p>
+
+      <h3>CPU won't boost above base clock</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>powercfg /list
+<span class="cm"># In Gaming mode, "Ultimate Performance" must be marked with *</span></pre>
+      </div>
+
+      <h3>CPU stuck at very low MHz (e.g. 1.4 GHz)</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>powercfg -query scheme_current sub_processor PROCTHROTTLEMAX
+<span class="cm"># Should be 0x50 (80%) in Office or 0x64 (100%) in Gaming</span></pre>
+      </div>
+
+      <h3>NVIDIA services not running after reboot</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell (Admin)</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>Set-ItemProperty -Path <span class="str">"HKLM:\SYSTEM\CurrentControlSet\Services\NvContainerLocalSystem"</span> -Name <span class="str">"Start"</span> -Value <span class="num">2</span>
+Set-ItemProperty -Path <span class="str">"HKLM:\SYSTEM\CurrentControlSet\Services\NVDisplay.ContainerLocalSystem"</span> -Name <span class="str">"Start"</span> -Value <span class="num">2</span>
+<span class="cm"># Then restart</span></pre>
+      </div>
+
+      <h3>After a driver update: NVML path has changed</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-lang">PowerShell</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre>Get-ChildItem <span class="str">"C:\Windows\System32\DriverStore\FileRepository\"</span> -Filter <span class="str">"nvml.dll"</span> -Recurse | Select-Object FullName</pre>
+      </div>
+      <p>Update the new path in <code>C:\Scripts\watcher.ps1</code> at the <code>$NvmlPath</code> variable.</p>
+    </div>
+
+    <!-- COMMAND REFERENCE -->
+    <div class="section" id="commands">
+      <h2><span class="num">11</span> Command Reference</h2>
+      <table class="data-table">
+        <thead><tr><th>Parameter</th><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>PROCTHROTTLEMAX</td><td>80</td><td>CPU max at 80% of base clock – Boost locked</td></tr>
+          <tr><td>PROCTHROTTLEMAX</td><td>100</td><td>CPU max at 100% – Boost unlocked</td></tr>
+          <tr><td>PROCTHROTTLEMIN</td><td>5</td><td>CPU can drop to 5% in idle (Office)</td></tr>
+          <tr><td>PROCTHROTTLEMIN</td><td>10</td><td>CPU minimum 10% (Gaming)</td></tr>
+          <tr><td>PERFEPP</td><td>0</td><td>Maximum performance, immediate boost</td></tr>
+          <tr><td>PERFEPP</td><td>60</td><td>Moderate – responds to load (AC Office)</td></tr>
+          <tr><td>PERFEPP</td><td>80</td><td>Energy saving (DC / battery)</td></tr>
+          <tr><td>setacvalueindex</td><td>–</td><td>Sets value for AC power (plugged in)</td></tr>
+          <tr><td>setdcvalueindex</td><td>–</td><td>Sets value for DC power (battery)</td></tr>
+          <tr><td>-duplicatescheme</td><td>–</td><td>Creates a copy of a power scheme</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <span>Power Profile Watcher – Guide</span>
+    <span style="color:var(--blue)">For AMD/Intel + NVIDIA dGPU Laptops · Windows 10/11</span>
+  </div>
+</main>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('.nav-link');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) current = s.id; });
+  navLinks.forEach(l => {
+    l.classList.remove('active');
+    if (l.getAttribute('href') === '#' + current) l.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
